@@ -409,9 +409,7 @@ int jail_strap(char safedir[])
 
 void jail_final(int socket)
 {
-    if(drop_chk())
-        die("Jailing a privileged process, exiting now.");
-
+    drop_chk();
     if(hand(socket))
         die("Unable to trigger jail setup");
 
