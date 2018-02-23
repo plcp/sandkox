@@ -231,7 +231,7 @@ static void perm_caps(int n)
             die("Unable to set capability set to permitted");
 
         if(cap_set_flag(capabilities, CAP_INHERITABLE, n, capability, CAP_SET))
-            die("Unable to set capability set to permitted");
+            die("Unable to set capability set to inheritable");
     }
 
     if(cap_set_proc(capabilities))
