@@ -210,7 +210,7 @@ void drop_root()
     drop_chk();
 }
 
-static void perm_caps()
+static void perm_caps(int n)
 {
     cap_value_t capability[3] = {
         CAP_SETPCAP,
@@ -222,14 +222,17 @@ static void perm_caps()
     if(cap_clear(capabilities))
         die("Unable to clean capabilities");
 
-    if(cap_set_flag(capabilities, CAP_EFFECTIVE, 3, capability, CAP_SET))
-        die("Unable to set capability set to effective");
+    if(n > 0)
+    {
+        if(cap_set_flag(capabilities, CAP_EFFECTIVE, n, capability, CAP_SET))
+            die("Unable to set capability set to effective");
 
-    if(cap_set_flag(capabilities, CAP_PERMITTED, 3, capability, CAP_SET))
-        die("Unable to set capability set to permitted");
+        if(cap_set_flag(capabilities, CAP_PERMITTED, n, capability, CAP_SET))
+            die("Unable to set capability set to permitted");
 
-    if(cap_set_flag(capabilities, CAP_INHERITABLE, 3, capability, CAP_SET))
-        die("Unable to set capability set to permitted");
+        if(cap_set_flag(capabilities, CAP_INHERITABLE, n, capability, CAP_SET))
+            die("Unable to set capability set to permitted");
+    }
 
     if(cap_set_proc(capabilities))
         die("Unable to set capabilities before dropping privileges");
@@ -253,14 +256,14 @@ static void save_caps()
             die("Unable to drop all capabilities");
     }
 
-    perm_caps();
+    perm_caps(3);
     if(prctl(PR_SET_KEEPCAPS, 1, _arg2))
         die("Unable to keep capabilities while dropping privileges");
 }
 
 static void keep_caps()
 {
-    perm_caps();
+    perm_caps(3);
     if(prctl(PR_SET_KEEPCAPS, 0, _arg2))
         die("Unable to disable capability keeping");
 
@@ -269,6 +272,8 @@ static void keep_caps()
 
     if(prctl(PR_CAPBSET_DROP, CAP_SETGID, _arg2))
         die("Unable to drop setgid capability");
+
+    perm_caps(1);
 }
 
 void drop_priv()
@@ -312,6 +317,8 @@ void lock_caps()
     for(; cap < 64; ++cap)
         if(prctl(PR_CAPBSET_DROP, cap, _arg2) && errno != EINVAL)
             die("Unable to drop all capabilities");
+
+    perm_caps(0);
 }
 
 void lock_priv()
@@ -382,14 +389,14 @@ int jail_strap(char safedir[])
         if(chdir(safedir))
             die("Unable to change directory to safe directory");
 
+        // chroot
+        if(chroot(safedir))
+            die("Unable to chroot to safe directory");
+
         // stay privileged to prevents unprivileged processes from accessing
         // our proc(5) pseudo-files (see ptrace(2) & search PTRACE_MODE_*)
         lock_bits();
         lock_caps();
-
-        // chroot
-        if(chroot(safedir))
-            die("Unable to chroot to safe directory");
 
         // effectively change directory
         if(chdir("/"))
