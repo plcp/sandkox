@@ -4,6 +4,8 @@
 Small sandbox inspired by Chromium's good ol' [suid sandbox](https://chromium.googlesource.com/chromium/src/+/lkcr/docs/linux_suid_sandbox_development.md)
 & friends
 
+Note: build as a challenge (archived [here](https://github.com/plcp/.relics/tree/master/ctf/thc18/pwn-sandbox)) for the [thc18](https://18.thcon.party) CTF.
+
 # quick setup
 
 Use the provided `Makefile`:
